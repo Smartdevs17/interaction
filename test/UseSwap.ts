@@ -128,6 +128,53 @@ describe("UseSwap", function () {
       expect(await useSwap.swapCount()).to.equal(1);
     });
 
+    it("Should add liquidity with ETH correctly", async function () {
+      const { useSwap } = await loadFixture(deployUseSwap);
+    
+      // Addresses for USDC and WETH
+      const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+      
+      // Liquidity parameters
+      const amountTokenDesired = ethers.parseUnits("10", 6);  // 10 USDC
+      const amountTokenMin = ethers.parseUnits("1", 6);       // Min 8 USDC to prevent slippage issues
+      const amountETHMin = ethers.parseUnits("20", 18);      // Min 0.5 ETH to prevent slippage
+      const deadline = Math.floor(Date.now() / 1000) + (60 * 10); // 10 minutes from now
+    
+      // Address of a USDC holder to impersonate
+      const TOKEN_HOLDER = "0xf584F8728B874a6a5c7A8d4d387C9aae9172D621";
+    
+      // Impersonate the USDC token holder
+      await helpers.impersonateAccount(TOKEN_HOLDER);
+      const impersonatedSigner = await ethers.getSigner(TOKEN_HOLDER);
+    
+      // Get the USDC contract with the impersonated signer
+      const USDC_Contract = await ethers.getContractAt("IERC20", USDC, impersonatedSigner);
+    
+      // Ensure the impersonated signer has enough USDC balance
+      const balance = await USDC_Contract.balanceOf(impersonatedSigner.address);
+      expect(balance).to.be.gte(amountTokenDesired);
+    
+      // Approve the `useSwap` contract to spend the USDC
+      await USDC_Contract.approve(useSwap, amountTokenDesired);
+    
+      // Increase the ETH provided for liquidity to match the USDC better
+      const tx = await useSwap.connect(impersonatedSigner).addLiquidityETH(
+        USDC,
+        amountTokenDesired,
+        amountTokenMin,  // Reduce slippage protection for token
+        amountETHMin,    // Reduce slippage protection for ETH
+        impersonatedSigner.address,
+        deadline,
+        { value: ethers.parseEther("5") }  // Provide more ETH (adjust this based on USDC/ETH price)
+      );
+    
+      await tx.wait();
+    
+      // Verify that liquidity has been added and swap count is incremented
+      expect(await useSwap.swapCount()).to.equal(1);
+    });
+    
+
     it("Should remove liquidity correctly", async function () {
       const { useSwap } = await loadFixture(deployUseSwap);
       const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";

@@ -166,6 +166,78 @@ contract UseSwap {
         swapCount += 1;
     }
 
+    // function addLiquidityETH(
+    //     address token,
+    //     uint amountTokenDesired,
+    //     uint amountTokenMin,
+    //     uint amountETHMin,
+    //     address to,
+    //     uint deadline
+    // ) external payable {    
+
+    //     // Transfer tokens from the sender to the contract
+    //     // IERC20(token).transferFrom(msg.sender, address(this), amountTokenDesired);
+
+    //     IERC20(token).approve(uniswapRouter, amountTokenDesired);
+    //     uint balance = IERC20(token).balanceOf(msg.sender);
+    //     console.log("balance", balance);
+    //     console.log("amountTokenDesired", amountTokenDesired);
+    //     console.log("amountETHMin", amountETHMin);
+    //     console.log("msg.value", msg.value);
+
+    //     // Approve the Uniswap router to spend the tokens
+    //     require(IERC20(token).approve(uniswapRouter, amountTokenDesired), "approve token failed.");
+
+    //     // Add liquidity using the Uniswap router
+    //     IUniswapV2Router(uniswapRouter).addLiquidityETH{value: msg.value}(
+    //         token,
+    //         amountTokenDesired,
+    //         amountTokenMin,
+    //         amountETHMin,
+    //         to,
+    //         deadline
+    //     );
+
+    //     // Increment the swap count
+    //     swapCount += 1;
+    // }
+
+    function addLiquidityETH(
+    address token,
+    uint amountTokenDesired,
+    uint amountTokenMin,
+    uint amountETHMin,
+    address to,
+    uint deadline
+) external payable {
+    // Check token balance of msg.sender
+    uint balance = IERC20(token).balanceOf(msg.sender);
+    require(balance >= amountTokenDesired, "Insufficient token balance");
+
+    console.log("balance", balance);
+    console.log("amountTokenDesired", amountTokenDesired);
+    console.log("amountETHMin", amountETHMin);
+    console.log("msg.value", msg.value);
+
+    // Approve the Uniswap router to spend the tokens
+    require(IERC20(token).approve(uniswapRouter, amountTokenDesired), "approve token failed.");
+
+    // Add liquidity using the Uniswap router
+    IUniswapV2Router(uniswapRouter).addLiquidityETH{value: msg.value}(
+        token,
+        amountTokenDesired,
+        amountTokenMin,
+        amountETHMin,
+        to,
+        deadline
+    );
+
+    // Increment the swap count
+    swapCount += 1;
+}
+
+        
+
     // // Function to handle exact ETH swaps for tokens
     // function handleExactETHSwapForTokens(
     //     uint amountOut,
@@ -249,4 +321,7 @@ contract UseSwap {
     //     // Increment the swap count
     //     swapCount += 1;
     // }
+
+    receive() external payable {}
+
 }
